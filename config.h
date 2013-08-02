@@ -35,43 +35,60 @@
 #define STEPPING_DDR       DDRD
 #define STEPPING_PORT      PORTD
 #define X_STEP_BIT         2  // Uno Digital Pin 2
-#define Y_STEP_BIT         3  // Uno Digital Pin 3
-#define Z_STEP_BIT         4  // Uno Digital Pin 4
-#define X_DIRECTION_BIT    5  // Uno Digital Pin 5
-#define Y_DIRECTION_BIT    6  // Uno Digital Pin 6
+#define Y_STEP_BIT         4  // Uno Digital Pin 4
+#define Z_STEP_BIT         6  // Uno Digital Pin 6
+#define X_DIRECTION_BIT    3  // Uno Digital Pin 3
+#define Y_DIRECTION_BIT    5  // Uno Digital Pin 5
 #define Z_DIRECTION_BIT    7  // Uno Digital Pin 7
+
+// Pin assignments for the second port, fourth axis stuff.
+#define C_AXIS_DDR         DDRB
+#define C_AXIS_PORT        PORTB
+#define C_STEP_BIT         2  //Uno Digital Pin 10
+#define C_DIRECTION_BIT    3  //Uno Digital Pin 11
+
 #define STEP_MASK ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT)) // All step bits
 #define DIRECTION_MASK ((1<<X_DIRECTION_BIT)|(1<<Y_DIRECTION_BIT)|(1<<Z_DIRECTION_BIT)) // All direction bits
 #define STEPPING_MASK (STEP_MASK | DIRECTION_MASK) // All stepping-related bits (step/direction)
+
+// Masks for second port, fourth axis:
+#define C_STEP_MASK ((1<<C_STEP_BIT))
+#define C_DIRECTION_MASK ((1<<C_DIRECTION_BIT))
+#define C_STEPPING_MASK (C_STEP_MASK | C_DIRECTION_MASK)
 
 #define STEPPERS_DISABLE_DDR    DDRB
 #define STEPPERS_DISABLE_PORT   PORTB
 #define STEPPERS_DISABLE_BIT    0  // Uno Digital Pin 8
 #define STEPPERS_DISABLE_MASK (1<<STEPPERS_DISABLE_BIT)
 
-// NOTE: All limit bit pins must be on the same port
-#define LIMIT_DDR       DDRB
-#define LIMIT_PIN       PINB
-#define LIMIT_PORT      PORTB
-#define X_LIMIT_BIT     1  // Uno Digital Pin 9
-#define Y_LIMIT_BIT     2  // Uno Digital Pin 10
-#define Z_LIMIT_BIT     3  // Uno Digital Pin 11
-#define LIMIT_INT       PCIE0  // Pin change interrupt enable pin
-#define LIMIT_INT_vect  PCINT0_vect 
-#define LIMIT_PCMSK     PCMSK0 // Pin change interrupt register
-#define LIMIT_MASK ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)) // All limit bits
+// NOTE: All limit bit pins must be on the same port. Here, they are on the
+// Analog port (Port C.) Moved the buttons to port B.
+#define LIMIT_DDR       DDRC
+#define LIMIT_PIN       PINC
+#define LIMIT_PORT      PORTC
+#define X_LIMIT_BIT     0  // Uno Analog Pin 0
+#define Y_LIMIT_BIT     1  // Uno Analog Pin 1
+#define Z_LIMIT_BIT     2  // Uno Analog Pin 2
+#define C_LIMIT_BIT     3  // Uno Analog Pin 3. Is this even a thing?
 
-#define SPINDLE_ENABLE_DDR   DDRB
+
+#define LIMIT_INT       PCIE1  // Pin change interrupt enable pin. Analog port.
+#define LIMIT_INT_vect  PCINT1_vect
+#define LIMIT_PCMSK     PCMSK1 // Pin change interrupt register
+#define LIMIT_MASK ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)|(1<<C_LIMIT_BIT)) // All limit bits
+
+
+#define SPINDLE_ENABLE_DDR   DDRC
 #define SPINDLE_ENABLE_PORT  PORTB
-#define SPINDLE_ENABLE_BIT   4  // Uno Digital Pin 12
+#define SPINDLE_ENABLE_BIT   4  // Uno Analog 4
 
-#define SPINDLE_DIRECTION_DDR   DDRB
-#define SPINDLE_DIRECTION_PORT  PORTB
-#define SPINDLE_DIRECTION_BIT   5  // Uno Digital Pin 13 (NOTE: D13 can't be pulled-high input due to LED.)
+#define SPINDLE_DIRECTION_DDR   DDRC
+#define SPINDLE_DIRECTION_PORT  PORTC
+#define SPINDLE_DIRECTION_BIT   5  // Uno Analog 5 (NOTE: D13 can't be pulled-high input due to LED.)
 
-#define COOLANT_FLOOD_DDR   DDRC
-#define COOLANT_FLOOD_PORT  PORTC
-#define COOLANT_FLOOD_BIT   3  // Uno Analog Pin 3
+#define COOLANT_FLOOD_DDR   DDRB
+#define COOLANT_FLOOD_PORT  PORTB
+#define COOLANT_FLOOD_BIT   6  // Uno Analog Pin 6
 
 // NOTE: Uno analog pins 4 and 5 are reserved for an i2c interface, and may be installed at
 // a later date if flash and memory space allows.
@@ -83,23 +100,25 @@
 #endif  
 
 // NOTE: All pinouts pins must be on the same port
-#define PINOUT_DDR       DDRC
-#define PINOUT_PIN       PINC
-#define PINOUT_PORT      PORTC
-#define PIN_RESET        0  // Uno Analog Pin 0
-#define PIN_FEED_HOLD    1  // Uno Analog Pin 1
-#define PIN_CYCLE_START  2  // Uno Analog Pin 2
-#define PINOUT_INT       PCIE1  // Pin change interrupt enable pin
-#define PINOUT_INT_vect  PCINT1_vect
-#define PINOUT_PCMSK     PCMSK1 // Pin change interrupt register
+#define PINOUT_DDR       DDRB
+#define PINOUT_PIN       PINB
+#define PINOUT_PORT      PORTB
+#define PIN_RESET        1  // Uno Dig. 9
+#define PIN_FEED_HOLD    4  // Uno Dig. 12
+#define PIN_CYCLE_START  5  // Uno Dig. 13
+#define PINOUT_INT       PCIE0  // Pin change interrupt enable pin
+#define PINOUT_INT_vect  PCINT0_vect
+#define PINOUT_PCMSK     PCMSK0 // Pin change interrupt register
 #define PINOUT_MASK ((1<<PIN_RESET)|(1<<PIN_FEED_HOLD)|(1<<PIN_CYCLE_START))
 
-// Define runtime command special characters. These characters are 'picked-off' directly from the
-// serial read data stream and are not passed to the grbl line execution parser. Select characters
-// that do not and must not exist in the streamed g-code program. ASCII control characters may be 
-// used, if they are available per user setup. Also, extended ASCII codes (>127), which are never in 
-// g-code programs, maybe selected for interface programs.
-// NOTE: If changed, manually update help message in report.c.
+/* Define runtime command special characters. These characters are
+'picked-off' directly from the // serial read data stream and are not
+passed to the grbl line execution parser. Select characters // that do
+not and must not exist in the streamed g-code program. ASCII control
+characters may be // used, if they are available per user setup. Also,
+extended ASCII codes (>127), which are never in // g-code programs,
+maybe selected for interface programs. // NOTE: If changed, manually
+update help message in report.c. */
 #define CMD_STATUS_REPORT '?'
 #define CMD_FEED_HOLD '!'
 #define CMD_CYCLE_START '~'
@@ -137,7 +156,7 @@
 // If homing is enabled, homing init lock sets Grbl into an alarm state upon power up. This forces
 // the user to perform the homing cycle (or override the locks) before doing anything else. This is
 // mainly a safety feature to remind the user to home, since position is unknown to Grbl.
-#define HOMING_INIT_LOCK // Comment to disable
+// #define HOMING_INIT_LOCK // Comment to disable
 
 // The homing cycle seek and feed rates will adjust so all axes independently move at the homing
 // seek and feed rates regardless of how many axes are in motion simultaneously. If disabled, rates

@@ -73,7 +73,7 @@ typedef struct {
   uint8_t coolant_mode;            // 0 = Disable, 1 = Flood Enable {M8, M9}
   float feed_rate;                 // Millimeters/min
 //  float seek_rate;                 // Millimeters/min. Will be used in v0.9 when axis independence is installed
-  float position[3];               // Where the interpreter considers the tool to be at this point in the code
+  float position[4];               // Where the interpreter considers the tool to be at this point in the code
   uint8_t tool;
 //  uint16_t spindle_speed;          // RPM/100
   uint8_t plane_axis_0, 
@@ -94,6 +94,6 @@ void gc_init();
 uint8_t gc_execute_line(char *line);
 
 // Set g-code parser position. Input in steps.
-void gc_set_current_position(int32_t x, int32_t y, int32_t z); 
+void gc_set_current_position(int32_t x, int32_t y, int32_t z, int32_t c); 
 
 #endif

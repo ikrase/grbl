@@ -64,11 +64,12 @@ void gc_init()
 
 // Sets g-code parser position in mm. Input in steps. Called by the system abort and hard
 // limit pull-off routines.
-void gc_set_current_position(int32_t x, int32_t y, int32_t z) 
+void gc_set_current_position(int32_t x, int32_t y, int32_t z, int32_t c) 
 {
   gc.position[X_AXIS] = x/settings.steps_per_mm[X_AXIS];
   gc.position[Y_AXIS] = y/settings.steps_per_mm[Y_AXIS];
-  gc.position[Z_AXIS] = z/settings.steps_per_mm[Z_AXIS]; 
+  gc.position[Z_AXIS] = z/settings.steps_per_mm[Z_AXIS];
+  gc.position[C_AXIS] = c/settings.steps_per_mm[C_AXIS];
 }
 
 static float to_millimeters(float value) 
@@ -99,7 +100,7 @@ uint8_t gc_execute_line(char *line)
   uint8_t absolute_override = false; // true(1) = absolute motion for this block only {G53}
   uint8_t non_modal_action = NON_MODAL_NONE; // Tracks the actions of modal group 0 (non-modal)
   
-  float target[3], offset[3];  
+  float target[4], offset[4];  
   clear_vector(target); // XYZ(ABC) axes parameters.
   clear_vector(offset); // IJK Arc offsets are incremental. Value of zero indicates no change.
     
@@ -235,6 +236,7 @@ uint8_t gc_execute_line(char *line)
       case 'X': target[X_AXIS] = to_millimeters(value); bit_true(axis_words,bit(X_AXIS)); break;
       case 'Y': target[Y_AXIS] = to_millimeters(value); bit_true(axis_words,bit(Y_AXIS)); break;
       case 'Z': target[Z_AXIS] = to_millimeters(value); bit_true(axis_words,bit(Z_AXIS)); break;
+      case 'C': target[C_AXIS] = to_millimeters(value); bit_true(axis_wors,bit(C_AXIS)); break;
       default: FAIL(STATUS_UNSUPPORTED_STATEMENT);
     }
   }
@@ -325,7 +327,7 @@ uint8_t gc_execute_line(char *line)
             target[i] = gc.position[i];
           }
         }
-        mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], settings.default_seek_rate, false);
+        mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[C_AXIS], settings.default_seek_rate, false);
       }
       // Retreive G28/30 go-home position data (in machine coordinates) from EEPROM
       float coord_data[N_AXIS];
@@ -334,7 +336,7 @@ uint8_t gc_execute_line(char *line)
       } else {
         if (!settings_read_coord_data(SETTING_INDEX_G28 ,coord_data)) { return(STATUS_SETTING_READ_FAIL); }     
       }      
-      mc_line(coord_data[X_AXIS], coord_data[Y_AXIS], coord_data[Z_AXIS], settings.default_seek_rate, false); 
+      mc_line(coord_data[X_AXIS], coord_data[Y_AXIS], coord_data[Z_AXIS], coord_data[C_AXIS], settings.default_seek_rate, false); 
       memcpy(gc.position, coord_data, sizeof(coord_data)); // gc.position[] = coord_data[];
       axis_words = 0; // Axis words used. Lock out from motion modes by clearing flags.
       break;
@@ -387,7 +389,7 @@ uint8_t gc_execute_line(char *line)
     // absolute mode coordinate offsets or incremental mode offsets.
     // NOTE: Tool offsets may be appended to these conversions when/if this feature is added.
     uint8_t i;
-    for (i=0; i<=2; i++) { // Axes indices are consistent, so loop may be used to save flash space.
+    for (i=0; i<=3; i++) { // Axes indices are consistent, so loop may be used to save flash space.
       if ( bit_istrue(axis_words,bit(i)) ) {
         if (!absolute_override) { // Do not update target in absolute override mode
           if (gc.absolute_mode) {
@@ -407,7 +409,7 @@ uint8_t gc_execute_line(char *line)
         break;
       case MOTION_MODE_SEEK:
         if (!axis_words) { FAIL(STATUS_INVALID_STATEMENT);} 
-        else { mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], settings.default_seek_rate, false); }
+        else { mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[C_AXIS], settings.default_seek_rate, false); }
         break;
       case MOTION_MODE_LINEAR:
         // TODO: Inverse time requires F-word with each statement. Need to do a check. Also need
@@ -415,7 +417,7 @@ uint8_t gc_execute_line(char *line)
         // and after an inverse time move and then check for non-zero feed rate each time. This
         // should be efficient and effective.
         if (!axis_words) { FAIL(STATUS_INVALID_STATEMENT);} 
-        else { mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], 
+        else { mc_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[C_AXIS],
           (gc.inverse_feed_rate_mode) ? inverse_feed_rate : gc.feed_rate, gc.inverse_feed_rate_mode); }
         break;
       case MOTION_MODE_CW_ARC: case MOTION_MODE_CCW_ARC:

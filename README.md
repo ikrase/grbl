@@ -9,6 +9,10 @@ It accepts standards-compliant G-code and has been tested with the output of sev
 
 Grbl includes full acceleration management with look ahead. That means the controller will look up to 18 motions into the future and plan its velocities ahead to deliver smooth acceleration and jerk-free cornering.
 
+** This version of Grbl offers 1. The ability to use four axes and 2. The ability to have the fourth axis (C) be on a different port than the first three. 
+
+
+
 ##Downloads (Right-Click and Save-Link-As):
 _**Master Branch:**_
 * [Grbl v0.8c Atmega328p 16mhz 9600baud](http://bit.ly/SSdCJE) Last updated: 2013-04-05 (Line buffer increased and overflow feedback added.)
